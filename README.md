@@ -1,6 +1,6 @@
 # Linear stability analysis code specifically for Taira Lab
 
-Scalable code for conducting linear analyses using the python bindings of PETSc and SLEPc.
+Scalable code for conducting linear analyses using the python bindings of PETSc and SLEPc. Inspired by some code written by [Miguel Fosas de Pando](https://github.com/miguelfp/nthRootsOfUnity).
 
 ## PETSc and SLEPc requirements
 ```
