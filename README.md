@@ -16,6 +16,7 @@ scipy
 mpi4py
 petsc4py
 slepc4py
+pandas (optional)
 ```
 
 ## Installation instructions
@@ -62,12 +63,8 @@ If you are using anaconda it is probably best to make a new environment. Make su
 Install numpy, scipy and mpi4py using pip.
 
 ### petsc4py
-petsc4py can also be installed using pip, see *https://www.mcs.anl.gov/petsc/petsc4py-current/docs/usrman/install.html*
+petsc4py should also be installed using pip, see *https://www.mcs.anl.gov/petsc/petsc4py-current/docs/usrman/install.html*
 
-However, I install it another way which worked better for me. First clone the petsc4py repo using
-```
-git clone git@bitbucket.org:petsc/petsc4py.git
-```
 Make sure that as when installing slepc you set
 ```
 export PETSC_DIR={where you put petsc}
@@ -80,7 +77,7 @@ export PETSC_ARCH=arch-complex-dbg:arch-complex-dbg:arch-whatever:...
 to install petsc4py with multiple different versions of petsc concurrently.
 Now run
 ```
-python setup.py install
+pip install petsc4py
 ```
 ### slepc4py
 After petsc4py has installed make sure that SLEPC_DIR is set via
@@ -91,10 +88,17 @@ and install slepc4py using pip
 ```
 pip install slepc4py
 ```
-Note, if you need to add versions of petsc to petsc4py you can repeat the petsc4py instructions. However, I've found that to then reinstall slepc4py with these extra versions you must run
+Note, if you need to add versions of petsc to petsc4py I've found that uninstalling the packages using
 ```
+pip uninstall petsc4py
+pip uninstall slepc4py
+```
+and then reinstalling by running
+```
+pip install petsc4py --no-cache-dir
 pip install slepc4py --no-cache-dir
 ```
+works well.
 Hopefully with some perseverance :computer: :wrench: you should have everything installed to use the code!
 # Usage
 To keep things as general as possible the workflow is separated into three pieces.
