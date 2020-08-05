@@ -5,6 +5,8 @@ import os,sys,getopt
 sys.path.append(os.environ["PETSC_DIR"]+'/lib/petsc/bin/')
 import PetscBinaryIO
 import argparse
+import h5py
+from scipy import sparse
 
 if __name__ == '__main__':
 
@@ -35,11 +37,18 @@ if __name__ == '__main__':
         print('You must specify the path to the linear operator')
 
     # Load the linear operator and create the required matices
-    matDict = loadmat(linop)
-
-    Base = matDict['Base'+baseName]
-    OptL_R = matDict['OptL'+baseName]
-    OptL_B = matDict['OptL_Beta'+baseName]
+    try:
+        matDict = loadmat(linop)
+        Base = matDict['Base'+baseName]
+        OptL_R = matDict['OptL'+baseName]
+        OptL_B = matDict['OptL_Beta'+baseName]
+    except:
+        print('Loading using h5py')
+        matDict =  h5py.File(linop, 'r')
+        Base = np.array(matDict['Base'+baseName]).T
+        OptL_R = sparse.csr_matrix((matDict['OptL'+baseName]["data"], matDict['OptL'+baseName]["ir"], matDict['OptL'+baseName]["jc"]))
+        data = matDict['OptL_Beta'+baseName]["data"]['real']+1j*matDict['OptL_Beta'+baseName]["data"]['imag']
+        OptL_B = sparse.csr_matrix((data, matDict['OptL_Beta'+baseName]["ir"], matDict['OptL_Beta'+baseName]["jc"]))
 
     GO = cons2Prim(Base)
     GI = prim2Cons(Base)
