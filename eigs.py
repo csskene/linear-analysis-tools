@@ -136,26 +136,43 @@ if __name__ == '__main__':
 
     nconv = E.getConverged()
     Print("Number of converged eigenpairs %d" % nconv)
+
+    if(not path.exists(outputdir+'singularvalues.txt')):
+        Print('Creating the file %s ' % outputdir+'eigenvalues.txt')
+        data = PETSc.Viewer().createASCII(outputdir+'eigenvalues.txt', 'w')
+        data.printfASCII(" evalue     residual norm \n")
+    else:
+        Print('Appending data to the previous file %s' % outputdir+'eigenvalues.txt')
+        data = PETSc.Viewer().create()
+        data.setType('ascii')
+        data.setFileMode(PETSc.Viewer().Mode.APPEND)
+        data.setFileName(outputdir+'eigenvalues.txt')
+
     if nconv > 0:
         # Create the results vectors
         vr, wr = L.getVecs()
         vi, wi = L.getVecs()
 
         Print()
-        Print("        k          ||Ax-kx||/||kx|| ")
-        Print("----------------- ------------------")
+        Print("         k            ||Ax-kx||/||kx|| ")
+        Print("-------------------- ------------------")
         for i in range(nconv):
             k = E.getEigenpair(i, vr, vi)
             error = E.computeError(i)
             if k.imag != 0.0:
-                Print(" %9f%+9f i %12g" % (k.real, k.imag, error))
+                Print(" %9f%+9fi %12g" % (k.real, k.imag, error))
+                data.printfASCII("%9f%+9fi %17.14g \n" % (k.real, k.imag, error))
             else:
                 Print(" %12f      %12g" % (k.real, error))
-            if(i==0):
-                viewer = PETSc.Viewer().createBinary('eigavr.dat','w')
-                viewer(vr)
-                viewer = PETSc.Viewer().createBinary('eigavi.dat','w')
-                viewer(vi)
+                data.printfASCII("%9f %17.14g \n" % (k.real,  error))
+            if(flg_leading and i==0):
+                PETSc.Viewer().createBinary('%sevector%9f%+9f.dat' % (outputdir,k.real, k.imag),'w')(vr)
+                # viewer(vr)
+                # viewer = PETSc.Viewer().createBinary('eigavi.dat','w')
+                # viewer(vi)
+            elif(flg_all):
+                PETSc.Viewer().createBinary('%sevector%9f%+9f.dat' % (outputdir,k.real, k.imag),'w')(vr)
+
         Print()
 
     Print()
