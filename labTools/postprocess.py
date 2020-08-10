@@ -29,7 +29,7 @@ if __name__ == '__main__':
         print('writing to default folder ',outdir)
 
     args = parser.parse_args()
-    modesdir = args.modesdir
+    modesdir = args.modesdir+'/'
     files = os.listdir(modesdir)
     modeFiles = [file for file in files if file.endswith('.dat')]
     mdict   = {}
@@ -43,4 +43,4 @@ if __name__ == '__main__':
             mdict[modeFile[:-4]] = vec
 
     if(not flg_py):
-        savemat(outdir+'singularVectors.mat',mdict,appendmat=True)
+        savemat(outdir+'/singularVectors.mat',mdict,appendmat=True)

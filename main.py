@@ -182,9 +182,9 @@ if __name__ == '__main__':
     if not alphaIter:
         alphaIter.append(0)
 
-    if(beta!=0 and linopbeta==False):
+    if((beta!=0 or betas!=0 or betaRange!=0) and linopbeta==False):
          raise RuntimeError('To use a non-zero spanwise wavenumber you must set the spanwise linear operator using -linopbeta')
-    else:
+    elif((beta!=0 or betas!=0 or betaRange!=0)):
          LB = PETSc.Mat().load(PETSc.Viewer().createBinary(linopbeta, 'r'))
          Print('Reading in LB from %s' % linopbeta)
 

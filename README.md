@@ -37,13 +37,17 @@ From the directory where PETSc is download run
 ```
 ./configure PETSC_ARCH=arch-complex-dbg --with-scalar-type=complex
 ```
-and follow the terminal instructions (this may take a while :tea:). Note, PETSC_ARCH is your choice and multiple versions of PETSc can be simultaneously installed by specifying different versions.
+and follow the terminal instructions (this may take a while :tea:). Note, PETSC_ARCH is your choice and multiple versions of PETSc can be simultaneously installed by specifying different versions. I usually also add the argument
+```
+--prefix=/path/to/folder
+```
+to specify the directory (a different one for each PETSC_ARCH) where I want PETSc to install the files.
 #### Other external libraries
 PETSc is able to download and install extra external libraries for you. These can be specified at configure time. For example, to install MUMPS add the following arguments to the configure
 ```
 --download-mumps --download-scalapack --download-parmetis --download-metis --download-ptscotch
 ```
-A full list of solvers is provided at this link *https://www.mcs.anl.gov/petsc/documentation/linearsolvertable.html*
+A full list of solvers is provided at this link *https://www.mcs.anl.gov/petsc/documentation/linearsolvertable.html*.
 ### SLEPc
 SLEPc is best downloaded as a tarball from *https://slepc.upv.es/download/* (the gitlab repository is the development version and not the release version). From this directory set the following environmental variables
 ```
