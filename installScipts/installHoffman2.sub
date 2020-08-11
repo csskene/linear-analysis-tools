@@ -1,0 +1,45 @@
+#!/bin/bash
+#$ -cwd
+#$ -j y
+#$ -l h_rt=01:00:00,h_data=16G,highp
+#$ -N installPetsc
+
+# Load the environments
+source /u/local/Modules/default/init/modules.sh
+
+module load ATS
+module load intel/18.0.4
+
+# Check
+module list
+
+cd $HOME
+mkdir -p packages
+cd packages
+
+git clone -b maint https://gitlab.com/petsc/petsc.git petsc
+
+cd petsc
+
+./configure PETSC_ARCH=arch-complex --with-cc=mpiicc --with-cxx=mpiicpc --with-fc=mpiifort --with-debugging=no --prefix=$PWD/complex --with-scalar-type=complex --with-blas-lapack-dir=$MKLROOT --download-mumps --download-parmetis --download-metis --download-ptscotch --with-scalapack-lib="-L${MKLROOT}/lib/intel64 -lmkl_sca\
+lapack_lp64 -lmkl_blacs_intelmpi_lp64" --with-scalapack-include=${MKLROOT}/include
+make PETSC_DIR=$PWD PETSC_ARCH=arch-complex all
+make PETSC_DIR=$PWD PETSC_ARCH=arch-complex install
+
+export PETSC_DIR=$HOME/packages/petsc/
+export PETSC_ARCH=arch-complex
+
+cd ..
+
+git clone -b maint https://gitlab.com/slepc/slepc.git slepc
+
+cd slepc
+export SLEPC_DIR=$HOME/packages/slepc
+./configure
+make SLEPC_DIR=$PWD PETSC_DIR=$PETSC_DIR PETSC_ARCH=$PETSC_ARCH
+
+module load python/3.7.2
+
+python3 -m pip install mpi4py
+python3 -m pip install petsc4py --user --no-cache-dir
+python3 -m pip install slepc4py --user --no-cache-dir
