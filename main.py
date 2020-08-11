@@ -247,84 +247,134 @@ if __name__ == '__main__':
             else:
                 resCtx.changeRes(L,omega,alpha)
 
-        S = SLEPc.SVD()
-        S.create()
-        S.setOperator(WR)
-        S.setFromOptions()
-        S.setUp()
-        if(iter==0):
-            Print( "*****************" )
-            Print( "*** SVD setup ***" )
-            Print( "*****************\n" )
-
-            svd_type = S.getType()
-            tol, maxit = S.getTolerances()
-            nsv, ncv, mpd = S.getDimensions()
-
-            Print( "Solution method: %s" % svd_type )
-            Print( "Stopping condition: tol=%.4g, maxit=%d" % (tol, maxit) )
-            Print( "Number of requested singular values: %d" % nsv )
-            Print( "Max dimension of the subspace (ncv): %d" % ncv )
-
-            Print()
-            Print( "***********************" )
-            Print( "*** Running the SVD ***" )
-            Print( "***********************\n" )
-
-        S.solve()
-
-        nconv = S.getConverged()
-
-        j = 0
-        if nconv > 0:
-            v, u = WR.getVecs()
-            Miv, Miu = WR.getVecs()
-            q, f = WO.getVecRight(), WO.getVecRight()
+        if(0):
+            S = SLEPc.SVD()
+            S.create()
+            S.setOperator(WR)
+            S.setFromOptions()
+            S.setUp()
             if(iter==0):
-                if(not path.exists(outputdir+'singularvalues.txt')):
-                    Print('Creating the file %s ' % outputdir+'singularvalues.txt')
-                    data = PETSc.Viewer().createASCII(outputdir+'singularvalues.txt', 'w')
-                    data.printfASCII("     Omega        alpha               beta         i         sigma          dsigma/domega      dsigma/dalpha       dsigma/dbeta       residual norm \n")
-                else:
-                    Print('Appending data to the previous file %s' % outputdir+'singularvalues.txt')
-                    data = PETSc.Viewer().create()
-                    data.setType('ascii')
-                    data.setFileMode(PETSc.Viewer().Mode.APPEND)
-                    data.setFileName(outputdir+'singularvalues.txt')
-                    # The next line would be better but doesn't seem to work
-                    # data = PETSc.Viewer().createASCII(outputdir+'singularvalues.txt',mode=PETSc.Viewer().Mode.APPEND)
-                Print()
-                Print("     Omega               alpha               beta         i         sigma          dsigma/domega      dsigma/dalpha       dsigma/dbeta       residual norm ")
-                Print("-----------------  -----------------  -----------------  ---  -----------------  -----------------  -----------------  -----------------  -------------------")
-            for i in range(nconv):
-                sigma = S.getSingularTriplet(i, u, v)
-                error = S.computeError(i)
-                # Compute the sensitivies
-                sens  = -sigma**2*u.dot(v)
-                if linopbeta:
-                    DA = 2.*beta*resCtx.LBR+1j*resCtx.LBI
-                    Miu = WO*DA*WI*u
-                    sensB = sigma**2*Miu.dot(v)
-                else:
-                    sensB = 0.
-                Print( "%17.14g  %17.14g  %17.14g  %03d  %17.14g  %17.14g  %17.14g  %17.14g  %17.14g" % (omega,alpha,beta,i, sigma,np.imag(sens),np.real(sens),np.real(sensB), error))
-                data.printfASCII("%17.14g  %17.14g  %17.14g  %03d  %17.14g  %17.14g  %17.14g  %17.14g  %17.14g \n" % (omega,alpha,beta,i, sigma,np.imag(sens),np.real(sens),np.real(sensB), error))
+                Print( "*****************" )
+                Print( "*** SVD setup ***" )
+                Print( "*****************\n" )
 
-                if(flg_leading and i==0):
-                    PETSc.Viewer().createBinary('%s_Mf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(v)
-                    PETSc.Viewer().createBinary('%s_Mq_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(u)
-                    # Miv = WI*v
-                    # Miu = WI*u
-                    # PETSc.Viewer().createBinary('%sf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(Miv)
-                    # PETSc.Viewer().createBinary('%sq_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(Miu)
-                elif(flg_all):
-                    PETSc.Viewer().createBinary('%s_Mf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(v)
-                    PETSc.Viewer().createBinary('%s_Mq_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(u)
-                    # Miv = WI*v
-                    # Miu = WI*u
-                    # PETSc.Viewer().createBinary('%sf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(Miv)
-                    # PETSc.Viewer().createBinary('%sq_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(Miu)
-        S.destroy()
+                svd_type = S.getType()
+                tol, maxit = S.getTolerances()
+                nsv, ncv, mpd = S.getDimensions()
+
+                Print( "Solution method: %s" % svd_type )
+                Print( "Stopping condition: tol=%.4g, maxit=%d" % (tol, maxit) )
+                Print( "Number of requested singular values: %d" % nsv )
+                Print( "Max dimension of the subspace (ncv): %d" % ncv )
+
+                Print()
+                Print( "***********************" )
+                Print( "*** Running the SVD ***" )
+                Print( "***********************\n" )
+
+            S.solve()
+
+            nconv = S.getConverged()
+        else:
+            Print('Randomised resolvent')
+            k = 8
+            Print('k = ',k)
+            test = WR.getVecRight()
+            sketch = WR.getVecRight()
+
+            rand = PETSc.Random().create()
+            rand.setType(rand.Type.RAND)
+
+            bv = SLEPc.BV()
+            bv.create()
+            bv.setType('vecs')
+            bv.setSizesFromVec(test, k)
+            for i in range(k):
+                test.setRandom(rand)
+                WR.mult(test, sketch)
+                bv.insertVec(i,sketch)
+
+            bv.orthogonalize()
+
+            n = test.getSize()
+            B = PETSc.Mat().createDense((n,k))
+            B.setUp()
+
+            y = WR.getVecRight()
+            for i in range(k):
+                v = bv.getColumn(i)
+                WR.multHermitian(v, y)
+                bv.restoreColumn(i,v)
+                low,high=y.getOwnershipRange()
+                B.setValues(np.arange(low,high,dtype='int32'),i,y)
+            bv.destroy()
+            B.assemblyBegin(B.AssemblyType.FINAL)
+            B.assemblyEnd(B.AssemblyType.FINAL)
+
+            S = SLEPc.SVD()
+            S.create()
+
+            S.setOperator(B)
+            S.solve()
+            nconv = S.getConverged()
+            v, u = B.getVecs()
+            Print(nconv)
+            for i in range(nconv):
+                S.getSingularTriplet(i, u, v)
+                y = WR*u
+                Print("norm = ", y.norm())
+
+
+        # j = 0
+        # if nconv > 0:
+        #     v, u = WR.getVecs()
+        #     Miv, Miu = WR.getVecs()
+        #     q, f = WO.getVecRight(), WO.getVecRight()
+        #     if(iter==0):
+        #         if(not path.exists(outputdir+'singularvalues.txt')):
+        #             Print('Creating the file %s ' % outputdir+'singularvalues.txt')
+        #             data = PETSc.Viewer().createASCII(outputdir+'singularvalues.txt', 'w')
+        #             data.printfASCII("     Omega        alpha               beta         i         sigma          dsigma/domega      dsigma/dalpha       dsigma/dbeta       residual norm \n")
+        #         else:
+        #             Print('Appending data to the previous file %s' % outputdir+'singularvalues.txt')
+        #             data = PETSc.Viewer().create()
+        #             data.setType('ascii')
+        #             data.setFileMode(PETSc.Viewer().Mode.APPEND)
+        #             data.setFileName(outputdir+'singularvalues.txt')
+        #             # The next line would be better but doesn't seem to work
+        #             # data = PETSc.Viewer().createASCII(outputdir+'singularvalues.txt',mode=PETSc.Viewer().Mode.APPEND)
+        #         Print()
+        #         Print("     Omega               alpha               beta         i         sigma          dsigma/domega      dsigma/dalpha       dsigma/dbeta       residual norm ")
+        #         Print("-----------------  -----------------  -----------------  ---  -----------------  -----------------  -----------------  -----------------  -------------------")
+        #     for i in range(nconv):
+        #         sigma = S.getSingularTriplet(i, u, v)
+        #         error = S.computeError(i)
+        #         # Compute the sensitivies
+        #         sens  = -sigma**2*u.dot(v)
+        #         if linopbeta:
+        #             DA = 2.*beta*resCtx.LBR+1j*resCtx.LBI
+        #             Miu = WO*DA*WI*u
+        #             sensB = sigma**2*Miu.dot(v)
+        #         else:
+        #             sensB = 0.
+        #         Print( "%17.14g  %17.14g  %17.14g  %03d  %17.14g  %17.14g  %17.14g  %17.14g  %17.14g" % (omega,alpha,beta,i, sigma,np.imag(sens),np.real(sens),np.real(sensB), error))
+        #         data.printfASCII("%17.14g  %17.14g  %17.14g  %03d  %17.14g  %17.14g  %17.14g  %17.14g  %17.14g \n" % (omega,alpha,beta,i, sigma,np.imag(sens),np.real(sens),np.real(sensB), error))
+        #
+        #         if(flg_leading and i==0):
+        #             PETSc.Viewer().createBinary('%s_Mf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(v)
+        #             PETSc.Viewer().createBinary('%s_Mq_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(u)
+        #             # Miv = WI*v
+        #             # Miu = WI*u
+        #             # PETSc.Viewer().createBinary('%sf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(Miv)
+        #             # PETSc.Viewer().createBinary('%sq_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(Miu)
+        #         elif(flg_all):
+        #             PETSc.Viewer().createBinary('%s_Mf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(v)
+        #             PETSc.Viewer().createBinary('%s_Mq_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(u)
+        #             # Miv = WI*v
+        #             # Miu = WI*u
+        #             # PETSc.Viewer().createBinary('%sf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(Miv)
+        #             # PETSc.Viewer().createBinary('%sq_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(Miu)
+        # S.destroy()
 
 
     Print()
