@@ -277,7 +277,7 @@ if __name__ == '__main__':
             nconv = S.getConverged()
         else:
             Print('Randomised resolvent')
-            k = 8
+            k = 10
             Print('k = ',k)
             test = WR.getVecRight()
             sketch = WR.getVecRight()
@@ -313,16 +313,38 @@ if __name__ == '__main__':
 
             S = SLEPc.SVD()
             S.create()
-
             S.setOperator(B)
             S.solve()
+
             nconv = S.getConverged()
             v, u = B.getVecs()
-            Print(nconv)
+
+            US = PETSc.Mat().createDense((n,nconv))
+            US.setUp()
+
             for i in range(nconv):
                 S.getSingularTriplet(i, u, v)
                 y = WR*u
-                Print("norm = ", y.norm())
+                low,high=y.getOwnershipRange()
+                US.setValues(np.arange(low,high,dtype='int32'),i,y)
+            US.assemblyBegin(US.AssemblyType.FINAL)
+            US.assemblyEnd(US.AssemblyType.FINAL)
+
+            S.destroy()
+            S = SLEPc.SVD()
+            S.create()
+
+            S.setOperator(US)
+            S.solve()
+            nconv = S.getConverged()
+            for i in range(nconv):
+                sigma = S.getSingularTriplet(i, u, v)
+                Print("Gain = ",sigma)
+                PETSc.Viewer().createBinary('%sMf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(v)
+                PETSc.Viewer().createBinary('%sMq_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(u)
+
+
+
 
 
         # j = 0
