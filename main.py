@@ -78,6 +78,34 @@ class resolvent(object):
         q.conjugate()
         self.WI.multTranspose(q, y)
 
+class randomisedResolvent(object):
+    def __init__(self, gains,leftVecs,rightVecs,WR):
+        # Class to hold randomised resolvent solution so can use the same commands
+        # as for the traditional SVD
+        self.gains     = gains
+        self.leftVecs  = leftVecs
+        self.rightVecs = rightVecs
+        self.WR = WR
+
+    def getSingularTriplet(self,i, u, v):
+        self.leftVecs.getColumnVector(i, u)
+        self.rightVecs.getColumnVector(i, v)
+        return self.gains[i]
+
+    def computeError(self,i):
+        u, v = self.WR.getVecs()
+        self.leftVecs.getColumnVector(i, u)
+        self.rightVecs.getColumnVector(i, v)
+        Av, AHu = self.WR.getVecs()
+        Av = self.WR*v
+        self.WR.multHermitian(u,AHu)
+        u1 = Av-self.gains[i]*u
+        v1 = AHu-self.gains[i]*v
+
+        norm1 = u1.norm()
+        norm2 = v1.norm()
+
+        return np.sqrt(norm1**2+norm2**2)/self.gains[i]
 
 if __name__ == '__main__':
     # Handles all options and running the relevant codes
@@ -115,6 +143,10 @@ if __name__ == '__main__':
     outputdir   = opts.getString('outputdir',False)
     flg_leading = opts.getBool('saveLeading',False)
     flg_all     = opts.getBool('saveAll',False)
+
+    # Use randomised resolvent
+    flgRandRes = opts.getBool('randomisedResolvent',False)
+    k          = opts.getInt('randk',10)
 
     if not outputdir:
         outputdir='./'
@@ -247,35 +279,136 @@ if __name__ == '__main__':
             else:
                 resCtx.changeRes(L,omega,alpha)
 
-        S = SLEPc.SVD()
-        S.create()
-        S.setOperator(WR)
-        S.setFromOptions()
-        S.setUp()
-        if(iter==0):
-            Print( "*****************" )
-            Print( "*** SVD setup ***" )
-            Print( "*****************\n" )
+        if(not flgRandRes):
+            S = SLEPc.SVD()
+            S.create()
+            S.setOperator(WR)
+            S.setFromOptions()
+            S.setUp()
+            if(iter==0):
+                Print( "*****************" )
+                Print( "*** SVD setup ***" )
+                Print( "*****************\n" )
 
-            svd_type = S.getType()
-            tol, maxit = S.getTolerances()
-            nsv, ncv, mpd = S.getDimensions()
+                svd_type = S.getType()
+                tol, maxit = S.getTolerances()
+                nsv, ncv, mpd = S.getDimensions()
 
-            Print( "Solution method: %s" % svd_type )
-            Print( "Stopping condition: tol=%.4g, maxit=%d" % (tol, maxit) )
-            Print( "Number of requested singular values: %d" % nsv )
-            Print( "Max dimension of the subspace (ncv): %d" % ncv )
+                Print( "Solution method: %s" % svd_type )
+                Print( "Stopping condition: tol=%.4g, maxit=%d" % (tol, maxit) )
+                Print( "Number of requested singular values: %d" % nsv )
+                Print( "Max dimension of the subspace (ncv): %d" % ncv )
 
-            Print()
-            Print( "***********************" )
-            Print( "*** Running the SVD ***" )
-            Print( "***********************\n" )
+                Print()
+                Print( "***********************" )
+                Print( "*** Running the SVD ***" )
+                Print( "***********************\n" )
 
-        S.solve()
+            S.solve()
 
-        nconv = S.getConverged()
+            nconv = S.getConverged()
+        else:
+            Print('Running the SVD using the randomised resolvent method')
+            Print('k = ',k)
+            test = WR.getVecRight()
+            sketch = WR.getVecRight()
 
-        j = 0
+            rand = PETSc.Random().create()
+            rand.setType(rand.Type.RAND)
+
+            bv = SLEPc.BV()
+            bv.create()
+            bv.setType('vecs')
+            bv.setSizesFromVec(test, k)
+            for i in range(k):
+                test.setRandom(rand)
+                WR.mult(test, sketch)
+                bv.insertVec(i,sketch)
+
+            bv.orthogonalize()
+
+            n = test.getSize()
+            B = PETSc.Mat().createDense((n,k))
+            B.setUp()
+
+            y = WR.getVecRight()
+            for i in range(k):
+                v = bv.getColumn(i)
+                WR.multHermitian(v, y)
+                bv.restoreColumn(i,v)
+                low,high=y.getOwnershipRange()
+                B.setValues(np.arange(low,high,dtype='int32'),i,y)
+            bv.destroy()
+            B.assemblyBegin(B.AssemblyType.FINAL)
+            B.assemblyEnd(B.AssemblyType.FINAL)
+
+            S = SLEPc.SVD()
+            S.create()
+            S.setOperator(B)
+            S.solve()
+
+            nconv = S.getConverged()
+            v, u = B.getVecs()
+
+            US = PETSc.Mat().createDense((n,nconv))
+            US.setUp()
+
+            V = PETSc.Mat().createDense((n,nconv))
+            V.setUp()
+
+            for i in range(nconv):
+                S.getSingularTriplet(i, u, v)
+                low,high=u.getOwnershipRange()
+                V.setValues(np.arange(low,high,dtype='int32'),i,u)
+                y = WR*u
+                low,high=y.getOwnershipRange()
+                US.setValues(np.arange(low,high,dtype='int32'),i,y)
+
+            V.assemblyBegin(V.AssemblyType.FINAL)
+            V.assemblyEnd(V.AssemblyType.FINAL)
+
+            US.assemblyBegin(US.AssemblyType.FINAL)
+            US.assemblyEnd(US.AssemblyType.FINAL)
+
+            S.destroy()
+            S = SLEPc.SVD()
+            S.create()
+
+            S.setOperator(US)
+            S.solve()
+            nconv = S.getConverged()
+
+            Vbar = PETSc.Mat().createDense((nconv,nconv))
+            Vbar.setUp()
+
+
+            leftVecs = PETSc.Mat().createDense((n,nconv))
+            leftVecs.setUp()
+
+            gains = []
+            for i in range(nconv):
+                sigma = S.getSingularTriplet(i, u, v)
+
+                low,high=v.getOwnershipRange()
+                Vbar.setValues(i,np.arange(low,high,dtype='int32'),v)
+                gains.append(sigma)
+                low,high=u.getOwnershipRange()
+                leftVecs.setValues(np.arange(low,high,dtype='int32'),i,u)
+
+            leftVecs.assemblyBegin(leftVecs.AssemblyType.FINAL)
+            leftVecs.assemblyEnd(leftVecs.AssemblyType.FINAL)
+
+            Vbar.assemblyBegin(Vbar.AssemblyType.FINAL)
+            Vbar.assemblyEnd(Vbar.AssemblyType.FINAL)
+
+            rightVecs = V.matMult(Vbar)
+            S.destroy()
+            S = randomisedResolvent(gains,leftVecs,rightVecs,WR)
+
+            # for i in range(nconv):
+            #     rightVecs.getColumnVector(i, u)
+            #     PETSc.Viewer().createBinary('%sMf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(u)
+
         if nconv > 0:
             v, u = WR.getVecs()
             Miv, Miu = WR.getVecs()
@@ -299,6 +432,7 @@ if __name__ == '__main__':
             for i in range(nconv):
                 sigma = S.getSingularTriplet(i, u, v)
                 error = S.computeError(i)
+
                 # Compute the sensitivies
                 sens  = -sigma**2*u.dot(v)
                 if linopbeta:
@@ -324,7 +458,8 @@ if __name__ == '__main__':
                     # Miu = WI*u
                     # PETSc.Viewer().createBinary('%sf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(Miv)
                     # PETSc.Viewer().createBinary('%sq_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(Miu)
-        S.destroy()
+        if(not flgRandRes):
+            S.destroy()
 
 
     Print()
