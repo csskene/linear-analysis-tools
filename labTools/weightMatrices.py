@@ -8,16 +8,32 @@ def prim2Cons(Base):
     R_Gas = 1./Gamma
     NCV = Base.shape[0]
 
-    RUBar = Base[:,4]
-    RVBar = Base[:,5]
-    RWBar = Base[:,6]
-    REBar = Base[:,7]
-    RBar  = Base[:,3]
+    if(Base.shape[1]==8):
+        flgW = True
+    else:
+        flgW = False
+
+    if(flgW):
+        RUBar = Base[:,4]
+        RVBar = Base[:,5]
+        RWBar = Base[:,6]
+        REBar = Base[:,7]
+        RBar  = Base[:,3]
+    else:
+        RUBar = Base[:,4]
+        RVBar = Base[:,5]
+        REBar = Base[:,6]
+        RBar  = Base[:,3]
 
     UBar = RUBar/RBar
     VBar = RVBar/RBar
-    WBar = RWBar/RBar
-    PBar = (Gamma - 1.)*(REBar-0.5*RBar*(UBar**2+VBar**2+WBar**2))
+
+    if(flgW):
+        WBar = RWBar/RBar
+        PBar = (Gamma - 1.)*(REBar-0.5*RBar*(UBar**2+VBar**2+WBar**2))
+    else:
+        PBar = (Gamma - 1.)*(REBar-0.5*RBar*(UBar**2+VBar**2))
+
 
     # Blocks for rho (identity matrix)
     RR = sp.identity(NCV)
@@ -30,21 +46,31 @@ def prim2Cons(Base):
     RV = sp.spdiags(VBar,0,NCV,NCV)
     VV = sp.spdiags(RBar,0,NCV,NCV)
 
-    # Blocks for rho*w
-    RW = sp.spdiags(WBar,0,NCV,NCV)
+    if(flgW):
+        # Blocks for rho*w
+        RW = sp.spdiags(WBar,0,NCV,NCV)
     WW = sp.spdiags(RBar,0,NCV,NCV)
 
     # Blocks for rho*e
-    D = 0.5*(UBar**2+VBar**2+WBar**2)+PBar/RBar/(Gamma-1)
+    if(flgW):
+        D = 0.5*(UBar**2+VBar**2+WBar**2)+PBar/RBar/(Gamma-1)
+    else:
+        D = 0.5*(UBar**2+VBar**2)+PBar/RBar/(Gamma-1)
+
     RT = sp.spdiags(D,0.,NCV,NCV)
     UT = sp.spdiags(RBar*UBar, 0, NCV, NCV)
     VT = sp.spdiags(RBar*VBar, 0, NCV, NCV)
-    WT = sp.spdiags(RBar*WBar, 0, NCV, NCV)
+    if(flgW):
+        WT = sp.spdiags(RBar*WBar, 0, NCV, NCV)
     TT = sp.spdiags(RBar*R_Gas/(Gamma-1), 0, NCV, NCV)
 
     Z0 = 0*sp.identity(NCV)
 
-    G = sp.bmat([[RR,Z0,Z0,Z0,Z0],[RU, UU, Z0, Z0, Z0],[RV, Z0, VV, Z0, Z0 ],[RW, Z0, Z0, WW, Z0 ],[RT, UT, VT, WT, TT]])
+    if(flgW):
+        G = sp.bmat([[RR,Z0,Z0,Z0,Z0],[RU, UU, Z0, Z0, Z0],[RV, Z0, VV, Z0, Z0 ],[RW, Z0, Z0, WW, Z0 ],[RT, UT, VT, WT, TT]])
+    else:
+        G = sp.bmat([[RR,Z0,Z0,Z0,Z0],[RU, UU, Z0, Z0, Z0],[RV, Z0, VV, Z0, Z0 ],[Z0, Z0, Z0, WW, Z0 ],[RT, UT, VT, Z0, TT]])
+
 
     return G
 
@@ -55,16 +81,31 @@ def cons2Prim(Base):
     R_Gas = 1./Gamma
     NCV = Base.shape[0]
 
-    RUBar = Base[:,4]
-    RVBar = Base[:,5]
-    RWBar = Base[:,6]
-    REBar = Base[:,7]
-    RBar  = Base[:,3]
+    if(Base.shape[1]==8):
+        flgW = True
+    else:
+        flgW = False
+
+    if(flgW):
+        RUBar = Base[:,4]
+        RVBar = Base[:,5]
+        RWBar = Base[:,6]
+        REBar = Base[:,7]
+        RBar  = Base[:,3]
+    else:
+        RUBar = Base[:,4]
+        RVBar = Base[:,5]
+        REBar = Base[:,6]
+        RBar  = Base[:,3]
 
     UBar = RUBar/RBar
     VBar = RVBar/RBar
-    WBar = RWBar/RBar
-    PBar = (Gamma - 1.)*(REBar-0.5*RBar*(UBar**2+VBar**2+WBar**2))
+    if(flgW):
+        WBar = RWBar/RBar
+        PBar = (Gamma - 1.)*(REBar-0.5*RBar*(UBar**2+VBar**2+WBar**2))
+    else:
+        PBar = (Gamma - 1.)*(REBar-0.5*RBar*(UBar**2+VBar**2))
+
 
     # Blocks for rho (identity matrix)
     RR = sp.identity(NCV)
@@ -78,20 +119,27 @@ def cons2Prim(Base):
     VV = sp.spdiags(1/RBar,0,NCV,NCV)
 
     # Blocks for rho*w
-    RW = sp.spdiags(-WBar/RBar,0,NCV,NCV)
+    if(flgW):
+        RW = sp.spdiags(-WBar/RBar,0,NCV,NCV)
     WW = sp.spdiags(1/RBar,0,NCV,NCV)
 
     # Blocks for rho*e
-    D = 0.5*(Gamma - 1)/R_Gas/RBar*(UBar**2 + VBar**2 + WBar**2) - PBar /(R_Gas*RBar**2)
+    if(flgW):
+        D = 0.5*(Gamma - 1)/R_Gas/RBar*(UBar**2 + VBar**2 + WBar**2) - PBar /(R_Gas*RBar**2)
+    else:
+        D = 0.5*(Gamma - 1)/R_Gas/RBar*(UBar**2 + VBar**2) - PBar /(R_Gas*RBar**2)
     RE = sp.spdiags(D,0.,NCV,NCV)
     UE = sp.spdiags(-(Gamma - 1)/R_Gas *UBar/RBar, 0, NCV, NCV)
     VE = sp.spdiags(-(Gamma - 1)/R_Gas *VBar/RBar, 0, NCV, NCV)
-    WE = sp.spdiags(-(Gamma - 1)/R_Gas *WBar/RBar, 0, NCV, NCV)
+    if(flgW):
+        WE = sp.spdiags(-(Gamma - 1)/R_Gas *WBar/RBar, 0, NCV, NCV)
     EE = sp.spdiags((Gamma - 1)/R_Gas/RBar, 0, NCV, NCV)
 
     Z0 = 0*sp.identity(NCV)
-
-    G = sp.bmat([[RR,Z0,Z0,Z0,Z0],[RU, UU, Z0, Z0, Z0],[RV, Z0, VV, Z0, Z0 ],[RW, Z0, Z0, WW, Z0 ],[RE, UE, VE, WE, EE]])
+    if(flgW):
+        G = sp.bmat([[RR,Z0,Z0,Z0,Z0],[RU, UU, Z0, Z0, Z0],[RV, Z0, VV, Z0, Z0 ],[RW, Z0, Z0, WW, Z0 ],[RE, UE, VE, WE, EE]])
+    else:
+        G = sp.bmat([[RR,Z0,Z0,Z0,Z0],[RU, UU, Z0, Z0, Z0],[RV, Z0, VV, Z0, Z0 ],[Z0, Z0, Z0, WW, Z0 ],[RE, UE, VE, Z0, EE]])
 
     return G
 
@@ -102,16 +150,32 @@ def EnormQuad(Base):
     R_Gas = 1./Gamma
     NCV5 = 5*Base.shape[0]
 
-    RUBar = Base[:,4]
-    RVBar = Base[:,5]
-    RWBar = Base[:,6]
-    REBar = Base[:,7]
-    RBar  = Base[:,3]
+    if(Base.shape[1]==8):
+        flgW = True
+    else:
+        flgW = False
+
+    if(flgW):
+        RUBar = Base[:,4]
+        RVBar = Base[:,5]
+        RWBar = Base[:,6]
+        REBar = Base[:,7]
+        RBar  = Base[:,3]
+    else:
+        RUBar = Base[:,4]
+        RVBar = Base[:,5]
+        REBar = Base[:,6]
+        RBar  = Base[:,3]
+
 
     UBar = RUBar/RBar
     VBar = RVBar/RBar
-    WBar = RWBar/RBar
-    TBar  = (Gamma - 1.0) *(REBar - 0.5*(RUBar**2 + RVBar**2 + RWBar**2)/RBar)/(R_Gas*RBar) ;
+    if(flgW):
+        WBar = RWBar/RBar
+        TBar  = (Gamma - 1.0) *(REBar - 0.5*(RUBar**2 + RVBar**2 + RWBar**2)/RBar)/(R_Gas*RBar) ;
+    else:
+        TBar  = (Gamma - 1.0) *(REBar - 0.5*(RUBar**2 + RVBar**2)/RBar)/(R_Gas*RBar) ;
+
     Volm = Base[:,2]
     Volm = Volm/np.linalg.norm(Volm)
 
@@ -205,14 +269,29 @@ def physVec(Base):
     NCV   = Base.shape[0]
     NCV5  = 5*NCV
 
-    X     = Base[:,0]
-    Y     = Base[:,1]
-    Volm  = Base[:,2]
-    RBar  = Base[:,3]
-    RUBar = Base[:,4]
-    RVBar = Base[:,5]
-    RWBar = Base[:,6]
-    REBar = Base[:,7]
+    if(Base.shape[1]==8):
+        flgW = True
+    else:
+        flgW = False
+
+    if(flgW):
+        X     = Base[:,0]
+        Y     = Base[:,1]
+        Volm  = Base[:,2]
+        RBar  = Base[:,3]
+        RUBar = Base[:,4]
+        RVBar = Base[:,5]
+        RWBar = Base[:,6]
+        REBar = Base[:,7]
+    else:
+        X     = Base[:,0]
+        Y     = Base[:,1]
+        Volm  = Base[:,2]
+        RBar  = Base[:,3]
+        RUBar = Base[:,4]
+        RVBar = Base[:,5]
+        REBar = Base[:,6]
+
 
     # Max grid values
     xmax  = np.amax(X)
@@ -223,8 +302,11 @@ def physVec(Base):
     # Convert to primitive variables
     UBar = np.divide(RUBar,RBar)
     VBar = np.divide(RVBar,RBar)
-    WBar = np.divide(RWBar,RBar)
-    PBar = (Gamma - 1.)*(REBar-0.5*RBar*(UBar**2+VBar**2+WBar**2))
+    if(flgW):
+        WBar = np.divide(RWBar,RBar)
+        PBar = (Gamma - 1.)*(REBar-0.5*RBar*(UBar**2+VBar**2+WBar**2))
+    else:
+        PBar = (Gamma - 1.)*(REBar-0.5*RBar*(UBar**2+VBar**2))
 
     # Generate structured mesh for interpolation
     dx = 0.1
@@ -237,20 +319,23 @@ def physVec(Base):
     Rbar_Interp = griddata((X,Y), RBar, (XG, YG), method='cubic') ;
     Ubar_Interp = griddata((X,Y), UBar, (XG, YG), method='cubic') ;
     Vbar_Interp = griddata((X,Y), VBar, (XG, YG), method='cubic') ;
-    Wbar_Interp = griddata((X,Y), WBar, (XG, YG), method='cubic') ;
+    if(flgW):
+        Wbar_Interp = griddata((X,Y), WBar, (XG, YG), method='cubic') ;
     Pbar_Interp = griddata((X,Y), PBar, (XG, YG), method='cubic') ;
 
     # Computing gradients in structured grid
     drdx,drdy = np.gradient(Rbar_Interp,dx,dy)
     dudx,dudy = np.gradient(Ubar_Interp,dx,dy)
     dvdx,dvdy = np.gradient(Vbar_Interp,dx,dy)
-    dwdx,dwdy = np.gradient(Wbar_Interp,dx,dy)
+    if(flgW):
+        dwdx,dwdy = np.gradient(Wbar_Interp,dx,dy)
     dpdx,dpdy = np.gradient(Pbar_Interp,dx,dy)
 
     dr = np.sqrt(np.square(drdx) + np.square(drdy))
     du = np.sqrt(np.square(dudx) + np.square(dudy))
     dv = np.sqrt(np.square(dvdx) + np.square(dvdy))
-    dw = np.sqrt(np.square(dwdx) + np.square(dwdy))
+    if(flgW):
+        dw = np.sqrt(np.square(dwdx) + np.square(dwdy))
     dp = np.sqrt(np.square(dpdx) + np.square(dpdy))
 
 
@@ -259,21 +344,43 @@ def physVec(Base):
     DR=[]
     for i, j in zip(X,Y):
         DR.append(f(i,j))
+    # Change to u? #######################
+    f = interp2d(xm, ym, np.transpose(du))
+    ######################################
     DU=[]
     for i, j in zip(X,Y):
         DU.append(f(i,j))
+
+    # Change to v? #######################
+    f = interp2d(xm, ym, np.transpose(dv))
+    ######################################
     DV=[]
     for i, j in zip(X,Y):
         DV.append(f(i,j))
-    DW=[]
-    for i, j in zip(X,Y):
-        DW.append(f(i,j))
+
+    if(flgW):
+        # Change to w? #######################
+        f = interp2d(xm, ym, np.transpose(dw))
+        ######################################
+        DW=[]
+        for i, j in zip(X,Y):
+            DW.append(f(i,j))
+    else:
+        DW = np.zeros(len(DV))
+
+
+    # Change to p? #######################
+    f = interp2d(xm, ym, np.transpose(dp))
+    ######################################
     DP=[]
     for i, j in zip(X,Y):
         DP.append(f(i,j))
 
     # Stack gradients per variable in sparse diagonal matrix
     phi = np.concatenate((DR,DU,DV,DW,DP), axis=None)
+
+    # Convert nan to zero
+    phi[np.isnan(phi)] = 0
     phi = sp.spdiags(phi,0,NCV5,NCV5)
 
-    return(phi)
+    return phi

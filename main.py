@@ -31,7 +31,10 @@ class resolvent(object):
             self.LBI.imagPart()
             self.RI += beta**2*self.LBR+1j*beta*self.LBI
         if SP:
+            self.SP = SP.duplicate(copy=True)
             self.RI -= SP
+        else:
+            self.SP = False
 
         # Allow to create new non-zeros on the diagonal
         self.RI.setOption(PETSc.Mat.Option.NEW_NONZERO_LOCATIONS,True)
@@ -63,6 +66,10 @@ class resolvent(object):
         L.copy(self.RI)
         if beta:
             self.RI += beta**2*self.LBR+1j*beta*self.LBI
+        if self.SP:
+            Print('adding sponge back')
+            self.RI -= SP
+
         self.RI.shift(1j*(omega+1j*alpha))
         self.RI.scale(-1)
 
@@ -325,9 +332,11 @@ if __name__ == '__main__':
 
             nconv = S.getConverged()
         else:
-            Print('Running the SVD using the randomised resolvent method')
-            Print('k = ',k)
-            test = WR.getVecRight()
+            if(iter==0):
+                Print('Running the SVD using the randomised resolvent method')
+                Print('k = ',k)
+            test  = WR.getVecRight()
+            testPhys = WR.getVecRight()
             sketch = WR.getVecRight()
 
             rand = PETSc.Random().create()
@@ -340,11 +349,11 @@ if __name__ == '__main__':
             for i in range(k):
                 test.setRandom(rand)
                 # added conditional for physics random test vector
-                if(physvec!=False):
-                    phi.mult(test,omega)
+                if(physvec):
+                    phi.mult(test,testPhys)
+                    WR.mult(testPhys, sketch)
                 else:
-                    omega = test
-                WR.mult(omega, sketch)
+                    WR.mult(test, sketch)
                 bv.insertVec(i,sketch)
 
             bv.orthogonalize()
