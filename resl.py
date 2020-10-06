@@ -388,7 +388,6 @@ if __name__ == '__main__':
             gains = []
             for i in range(nconv):
                 sigma = S.getSingularTriplet(i, u, v)
-
                 low,high=v.getOwnershipRange()
                 Vbar.setValues(i,np.arange(low,high,dtype='int32'),v)
                 gains.append(sigma)
@@ -401,7 +400,18 @@ if __name__ == '__main__':
             Vbar.assemblyBegin(Vbar.AssemblyType.FINAL)
             Vbar.assemblyEnd(Vbar.AssemblyType.FINAL)
 
-            rightVecs = V.matMult(Vbar)
+            rightVecs = PETSc.Mat().createDense((n,nconv))
+            rightVecs.setUp()
+
+            for i in range(nconv):
+                u = Vbar.getColumnVector(i, v)
+                rightVec = V*u
+                low,high=rightVec.getOwnershipRange()
+                rightVecs.setValues(np.arange(low,high,dtype='int32'),i,rightVec)
+
+            rightVecs.assemblyBegin(rightVecs.AssemblyType.FINAL)
+            rightVecs.assemblyEnd(rightVecs.AssemblyType.FINAL)
+            # rightVecs = V.matMult(Vbar)
             S.destroy()
             S = randomisedResolvent(gains,leftVecs,rightVecs,WR)
 
