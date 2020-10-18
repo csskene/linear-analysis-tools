@@ -66,6 +66,7 @@ if __name__ == '__main__':
         # Get only the mode of interest
         interMode = df['i'] == modeNum
         dfmode1 = df[interMode].reset_index()
+        dfmode1 = dfmode1.sort_values('Omega').reset_index()
 
         # Fit cubic splines between consecutive singular values and plot
         for iter in range(len(dfmode1['Omega'])-1):
