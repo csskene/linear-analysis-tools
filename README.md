@@ -197,15 +197,15 @@ Secondly, multiplying a vector by the resolvent requires a matrix inverse (which
 
 Running the code using
 ```
-python main.py
+python resl.py
 ```
 will compute the resolvent modes using the default settings in series. This will take the LU decomposition using the built in petsc method. If we instead wish to use mumps to take the LU decomposition this can be achieved (as long as PETSc was installed with mumps) by instead running
 ```
-python main.py -pc_factor_mat_solver_type mumps
+python resl.py -pc_factor_mat_solver_type mumps
 ```
 To run the code in parallel on four processors run
 ```
-mpiexec -n 4 python main.py -pc_factor_mat_solver_type mumps
+mpiexec -n 4 python resl.py -pc_factor_mat_solver_type mumps
 ```
 Note, the petsc LU decomposition cannot run in parallel so mumps or another parallel LU package must be installed (we can also omit the -pc_factor_mat_solver_type argument in this case).
 
@@ -231,7 +231,7 @@ PETSc outputs binary files. For further analysis/visualisation in python/MATLAB 
 
 Running
 ```
-python postprocces.py -modedir modesdir
+python postprocess.py -modesdir modesdir
 ```
 will write all the singular vectors contained in *modesdir* to a MATLAB file. To specify python output use the argument
 ```
@@ -258,7 +258,7 @@ Note, that n=0 is the leading singular value. Specify n=-1 to plot all modes. Th
 ## Tips
 There could be many options to be set to run this code. Luckily, these can all be written in a file and can be used by running the code with the option `-options_file`. For example, if the code options are in *opts.txt* the code can be used with these arguments by running
 ```
-mpiexec python main.py -options_file opts.txt
+mpiexec python resl.py -options_file opts.txt
 ```
 For a comprehensive breakdown of the code use the argument `-log_view`.
 ## Concluding remarks

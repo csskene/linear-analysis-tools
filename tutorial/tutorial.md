@@ -12,11 +12,11 @@ This will create the binary files in the folder binFiles. The argument `-baseNam
 ## The main code
 Now we have created the binary files we are ready to do a resolvent analysis. In series we can achieve this by running
 ```
-python ../main.py -linop binFiles/L.dat -wifile binFiles/WI.dat -wofile binFiles/WO.dat -wifile binFiles/WI.dat -omega 1 -outputdir out -saveLeading
+python ../resl.py -linop binFiles/L.dat -wifile binFiles/WI.dat -wofile binFiles/WO.dat -wifile binFiles/WI.dat -omega 1 -outputdir out -saveLeading
 ```
 This will run the resolvent for unit frequency and put the output in the folder */out*. The leading singular values will be saved. We can see that a lot of arguments were used. In order to make the code more readable these options can be written in a file. The file *opts.txt* contains the same arguments except that omega is changed to 2, and we specify that we want mumps to do the LU decomposition by adding `-pc_factor_mat_solver_type mumps`. Now run the resolvent using
 ```
-python ../main.py -options_file opts.txt
+python ../resl.py -options_file opts.txt
 ```
 We see that the file `out/singularvalues.txt` has been appended to with the results for the new frequency.
 
