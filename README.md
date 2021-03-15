@@ -13,6 +13,7 @@ All using Python 3.7 :snake:
 ```
 numpy
 scipy
+h5py
 mpi4py
 petsc4py
 slepc4py
