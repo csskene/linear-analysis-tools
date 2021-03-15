@@ -50,7 +50,11 @@ PETSc is able to download and install extra external libraries for you. These ca
 ```
 A full list of solvers is provided at this link *https://www.mcs.anl.gov/petsc/documentation/linearsolvertable.html*.
 ### SLEPc
-SLEPc is best downloaded as a tarball from *https://slepc.upv.es/download/* (the gitlab repository is the development version and not the release version). From this directory set the following environmental variables
+SLEPc can be downloaded in a similar manner to PETSc by running
+```
+git clone -b release https://gitlab.com/slepc/slepc slepc
+```
+From this directory set the following environmental variables
 ```
 export PETSC_DIR={where you put petsc}
 export PETSC_ARCH=arch-complex-dbg (or whatever value you need)
