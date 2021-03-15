@@ -27,7 +27,7 @@ Good luck! :four_leaf_clover:
 ### PETSc
 PETSc can be downloaded from the gitlab repository by running
 ```
-git clone -b maint https://gitlab.com/petsc/petsc.git petsc
+git clone -b release https://gitlab.com/petsc/petsc.git petsc
 ```
 
 For detailed installations instructions please see *https://www.mcs.anl.gov/petsc/documentation/installation.html*
