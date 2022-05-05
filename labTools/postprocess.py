@@ -37,7 +37,7 @@ if __name__ == '__main__':
         vec = PetscBinaryIO.PetscBinaryIO().readBinaryFile(modesdir+modeFile)
         if(flg_py):
             vec = np.squeeze(np.array(vec))
-            np.save(modeFile[:-4],vec)
+            np.save(outdir+'/'+modeFile[:-4],vec)
         else:
             modeFile = modeFile.replace('.','p')
             mdict[modeFile[:-4]] = vec

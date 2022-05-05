@@ -44,12 +44,13 @@ if __name__ == '__main__':
         OptL_R = matDict['OptL'+baseName]
         OptL_B = matDict['OptL_Beta'+baseName]
     except:
+        # For matlab 7.3 files
         print('Loading using h5py')
         matDict =  h5py.File(linop, 'r')
         Base = np.array(matDict['Base'+baseName]).T
-        OptL_R = sparse.csr_matrix((matDict['OptL'+baseName]["data"], matDict['OptL'+baseName]["ir"], matDict['OptL'+baseName]["jc"]))
+        OptL_R = sparse.csc_matrix((matDict['OptL'+baseName]["data"], matDict['OptL'+baseName]["ir"], matDict['OptL'+baseName]["jc"]))
         data = matDict['OptL_Beta'+baseName]["data"]['real']+1j*matDict['OptL_Beta'+baseName]["data"]['imag']
-        OptL_B = sparse.csr_matrix((data, matDict['OptL_Beta'+baseName]["ir"], matDict['OptL_Beta'+baseName]["jc"]))
+        OptL_B = sparse.csc_matrix((data, matDict['OptL_Beta'+baseName]["ir"], matDict['OptL_Beta'+baseName]["jc"]))
 
 
     sponge = np.array([1, -1, 1, -1], dtype = float)
