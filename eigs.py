@@ -97,9 +97,11 @@ if __name__ == '__main__':
     E.create()
     E.setOperators(L)
     E.setFromOptions()
-    E.setUp()
+    E.setTarget(2+4j)
     st = E.getST()
-    st.setUp()
+    st.setType(st.Type.SINVERT)
+    E.setUp()
+
     Print()
     Print("******************************")
     Print("*** Eigenvalue setup *********")
@@ -110,12 +112,22 @@ if __name__ == '__main__':
     Print("Solution method: %s" % eps_type)
     eps_which = E.getWhichEigenpairs()
     Print( "Which eigenvalues to find: %s" % eps_which)
-    st = E.getST()
+
+    st_type = st.getType()
+    Print("Spectral transformation method: %s" % st_type)
+
     shift = st.getShift()
     Print( "Shift = : %f + 1i*(%f)" % (np.real(shift),np.imag(shift)))
 
     target= E.getTarget()
     Print( "Target = : %f + 1i*(%f)" % (np.real(target),np.imag(target)))
+
+    ksp = st.getKSP()
+    ksp_type = ksp.getType()
+    Print( "Linear systems solved via %s" % ksp_type)
+    pc = ksp.getPC()
+    pc_type = pc.getType()
+    Print( "Preconditioner type %s" % pc_type)
 
     nev, ncv, mpd = E.getDimensions()
     Print("Number of requested eigenvalues: %d" % nev)
