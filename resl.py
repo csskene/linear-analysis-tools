@@ -16,7 +16,7 @@ from slepc4py import SLEPc
 Print = PETSc.Sys.Print
 
 class resolvent(object):
-    def __init__(self, L,WO,WI,omega,alpha,LB=False,beta=False):
+    def __init__(self, L,WO,WI,omega,alpha,LB=False,beta=False,SP=False):
         # Apply the weight matrices to get the weighted inverse resolvent
 
         Print( "***********************" )
@@ -30,6 +30,11 @@ class resolvent(object):
             self.LBI = LB.duplicate(copy=True)
             self.LBI.imagPart()
             self.RI += beta**2*self.LBR+1j*beta*self.LBI
+        if SP:
+            self.SP = SP.duplicate(copy=True)
+            self.RI -= SP
+        else:
+            self.SP = False
 
         # Allow to create new non-zeros on the diagonal
         self.RI.setOption(PETSc.Mat.Option.NEW_NONZERO_LOCATIONS,True)
@@ -61,6 +66,10 @@ class resolvent(object):
         L.copy(self.RI)
         if beta:
             self.RI += beta**2*self.LBR+1j*beta*self.LBI
+        if self.SP:
+            Print('adding sponge back')
+            self.RI -= SP
+
         self.RI.shift(1j*(omega+1j*alpha))
         self.RI.scale(-1)
 
@@ -138,6 +147,8 @@ if __name__ == '__main__':
     omegaRange = opts.getString('omegaRange',False)
     alphas     = opts.getString('discs',False)
     alphaRange = opts.getString('discRange',False)
+    sponge     = opts.getString('sponge',False)
+    physvec    = opts.getString('physvec',False)
 
     # Options for saving
     outputdir   = opts.getString('outputdir',False)
@@ -172,6 +183,19 @@ if __name__ == '__main__':
         Print('Reading in WI from %s' % wifile)
     else:
         Print('No WI matrix set')
+
+    if(sponge!=False):
+        SP = PETSc.Mat().load(PETSc.Viewer().createBinary(sponge, 'r'))
+        Print('Reading in SP from %s' % sponge)
+    else:
+        Print('No sponge set')
+
+    if(physvec!=False):
+        phi = PETSc.Mat().load(PETSc.Viewer().createBinary(physvec, 'r'))
+        Print('Reading in Physics-Based Vector from %s' % physvec)
+    else:
+        Print('No sacling in random test vector')
+
 
     if(linop!=False):
         L = PETSc.Mat().load(PETSc.Viewer().createBinary(linop, 'r'))
@@ -308,9 +332,11 @@ if __name__ == '__main__':
 
             nconv = S.getConverged()
         else:
-            Print('Running the SVD using the randomised resolvent method')
-            Print('k = ',k)
-            test = WR.getVecRight()
+            if(iter==0):
+                Print('Running the SVD using the randomised resolvent method')
+                Print('k = ',k)
+            test  = WR.getVecRight()
+            testPhys = WR.getVecRight()
             sketch = WR.getVecRight()
 
             rand = PETSc.Random().create()
@@ -322,7 +348,12 @@ if __name__ == '__main__':
             bv.setSizesFromVec(test, k)
             for i in range(k):
                 test.setRandom(rand)
-                WR.mult(test, sketch)
+                # added conditional for physics random test vector
+                if(physvec):
+                    phi.mult(test,testPhys)
+                    WR.mult(testPhys, sketch)
+                else:
+                    WR.mult(test, sketch)
                 bv.insertVec(i,sketch)
 
             bv.orthogonalize()

@@ -7,6 +7,7 @@ import PetscBinaryIO
 import argparse
 import h5py
 from scipy import sparse
+import numpy as np
 
 if __name__ == '__main__':
 
@@ -51,11 +52,15 @@ if __name__ == '__main__':
         data = matDict['OptL_Beta'+baseName]["data"]['real']+1j*matDict['OptL_Beta'+baseName]["data"]['imag']
         OptL_B = sparse.csc_matrix((data, matDict['OptL_Beta'+baseName]["ir"], matDict['OptL_Beta'+baseName]["jc"]))
 
+
+    sponge = np.array([1, -1, 1, -1], dtype = float)
     GO = cons2Prim(Base)
     GI = prim2Cons(Base)
     FI,FO = EnormQuad(Base)
     WO = FO@GO
     WI = GI@FI
+    SP = linopSponge(Base,sponge)
+    phi = physVec(Base)
 
     if not os.path.exists(outdir):
         os.mkdir(outdir)
@@ -64,6 +69,8 @@ if __name__ == '__main__':
     PetscBinaryIO.PetscBinaryIO().writeMatSciPy(open(outdir+'/WO.dat','w'), WO)
     PetscBinaryIO.PetscBinaryIO().writeMatSciPy(open(outdir+'/WI.dat','w'), WI)
     PetscBinaryIO.PetscBinaryIO().writeMatSciPy(open(outdir+'/LB.dat','w'), OptL_B)
+    PetscBinaryIO.PetscBinaryIO().writeMatSciPy(open(outdir+'/SP.dat','w'), SP)
+    PetscBinaryIO.PetscBinaryIO().writeMatSciPy(open(outdir+'/PHI.dat','w'), phi)
 
     f = open(outdir+'/info.txt', 'w')
     f.write('Binary files created from the linop %s \n' % linop)
