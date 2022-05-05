@@ -44,7 +44,7 @@ class resolvent(object):
         pc.setType('lu')
         # Can overwrite from options
         self.R.setFromOptions()
-        pc.setFromOptions()
+        # pc.setFromOptions()
         # Setup now so can print useful information before any solves
         self.R.setUp()
         ksp_type = self.R.getType()
@@ -345,10 +345,12 @@ if __name__ == '__main__':
             S = SLEPc.SVD()
             S.create()
             S.setOperator(B)
+            S.setDimensions(nsv=k)
             S.solve()
 
             nconv = S.getConverged()
             v, u = B.getVecs()
+            Print("nconv",nconv)
 
             US = PETSc.Mat().createDense((n,nconv))
             US.setUp()
@@ -375,9 +377,10 @@ if __name__ == '__main__':
             S.create()
 
             S.setOperator(US)
+            S.setDimensions(nsv=k)
             S.solve()
             nconv = S.getConverged()
-
+            Print("nconv",nconv)
             Vbar = PETSc.Mat().createDense((nconv,nconv))
             Vbar.setUp()
 
@@ -455,19 +458,19 @@ if __name__ == '__main__':
                 data.printfASCII("%17.14g  %17.14g  %17.14g  %03d  %17.14g  %17.14g  %17.14g  %17.14g  %17.14g \n" % (omega,alpha,beta,i, sigma,np.imag(sens),np.real(sens),np.real(sensB), error))
 
                 if(flg_leading and i==0):
-                    PETSc.Viewer().createBinary('%s_Mf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(v)
-                    PETSc.Viewer().createBinary('%s_Mq_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(u)
-                    # Miv = WI*v
-                    # Miu = WI*u
-                    # PETSc.Viewer().createBinary('%sf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(Miv)
-                    # PETSc.Viewer().createBinary('%sq_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(Miu)
+                    PETSc.Viewer().createBinary('%sMf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(v)
+                    PETSc.Viewer().createBinary('%sMq_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(u)
+                    Miv = WI*v
+                    Miu = WI*u
+                    PETSc.Viewer().createBinary('%sf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(Miv)
+                    PETSc.Viewer().createBinary('%sq_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(Miu)
                 elif(flg_all):
-                    PETSc.Viewer().createBinary('%s_Mf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(v)
-                    PETSc.Viewer().createBinary('%s_Mq_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(u)
-                    # Miv = WI*v
-                    # Miu = WI*u
-                    # PETSc.Viewer().createBinary('%sf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(Miv)
-                    # PETSc.Viewer().createBinary('%sq_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(Miu)
+                    PETSc.Viewer().createBinary('%sMf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(v)
+                    PETSc.Viewer().createBinary('%sMq_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(u)
+                    Miv = WI*v
+                    Miu = WI*u
+                    PETSc.Viewer().createBinary('%sf_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(Miv)
+                    PETSc.Viewer().createBinary('%sq_k%03d_om%05.2f_alpha%05.2f_beta%05.2f.dat' % (outputdir, i, omega, alpha, beta), 'w')(Miu)
         if(not flgRandRes):
             S.destroy()
 
