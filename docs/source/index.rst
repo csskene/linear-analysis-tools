@@ -10,6 +10,10 @@ Welcome to Linear analysis tools's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   install
+   usage
+   tips
+
 
 
 Indices and tables
