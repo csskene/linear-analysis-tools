@@ -13,6 +13,7 @@ Welcome to Linear analysis tools's documentation!
    install
    usage
    tips
+   tutorial
 
 
 
