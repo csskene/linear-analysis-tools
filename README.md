@@ -18,11 +18,11 @@ If this repository was useful for your research, please consider citing it as
 @misc{linear_analysis_toos, 
 title={csskene/linear-analysis-tools: Initial release}, 
 version={v0.1.0},
-DOI={10.5281/zenodo.6550725}, 
+DOI={10.5281/zenodo.6550726}, 
 publisher={Zenodo}, 
 author={Skene, Calum S. and Ribeiro, Jean H. M.},
 year={2022},
 month={May},
-url={https://doi.org/10.5281/zenodo.6550725},
-howpublished={https://doi.org/10.5281/zenodo.6550725}}
+url={https://doi.org/10.5281/zenodo.6550726},
+howpublished={https://doi.org/10.5281/zenodo.6550726}}
 ```
