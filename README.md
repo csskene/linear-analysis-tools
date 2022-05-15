@@ -1,4 +1,5 @@
-[![DOI](https://zenodo.org/badge/283002161.svg)](https://zenodo.org/badge/latestdoi/283002161)
+[![DOI](https://zenodo.org/badge/283002161.svg)](https://zenodo.org/badge/latestdoi/283002161) [![Documentation Status](https://readthedocs.org/projects/linear-analysis-tools/badge/?version=latest)](https://linear-analysis-tools.readthedocs.io/en/latest/?badge=latest)
+      
 
 # Linear analysis tools
 
