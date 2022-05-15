@@ -2,10 +2,27 @@
 
 # Linear analysis tools
 
-This code contains scalable code for conducting linear analyses using the python bindings of PETSc and SLEPc.
+This repository contains scalable code for conducting linear analyses using the python bindings of PETSc and SLEPc.
 
 ## Developers
 
 * [Calum S. Skene](https://github.com/csskene)
 
 * [Jean H. M. Ribeiro](https://github.com/jeanmarqueseng)
+
+## Citation
+
+If this repository was useful for your research, please consider citing it as
+
+```
+@misc{linear_analysis_toos, 
+title={csskene/linear-analysis-tools: Initial release}, 
+version={v0.1.0},
+DOI={10.5281/zenodo.6550725}, 
+publisher={Zenodo}, 
+author={Skene, Calum S. and Ribeiro, Jean H. M.},
+year={2022},
+month={May},
+url={https://doi.org/10.5281/zenodo.6550725},
+howpublished={https://doi.org/10.5281/zenodo.6550725}}
+```
