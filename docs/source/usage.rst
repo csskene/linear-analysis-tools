@@ -14,15 +14,11 @@ Preprocessing
 
 All required matrices must first be written to PETSc binary files so that the code and read these in as distributed sparse matrices. To do this the python script *preprocess.py* in the folder *tools* can be used.
 
-Example: To obtain binary files from the linear operators in the file *cavity.mat* using the names *Base*, *OptL* and *OptL_Beta* run::
+Example: To obtain a binary file from the linear operator L saved as a scipy sparse matrix in L.npz, run
 
-  python preprocess.py -linop path/to/cavity.mat
+  python preprocess.py -linop path/to/L.npz
 
-If the names are instead appended to *Base_NP01*, *OptL_NP01* and *OptL_Beta_NP01* for example instead run::
-
-  python preprocess.py -linop path/to/cavity.mat -baseName _NP01
-
-to append *'_NP01'* to the names. Lastly, to specify an output directory for the binary files use the argument::
+This produces the file L.dat that can be read by petsc. To additionally specify an output directory for the binary file use the argument::
 
   -outputdir outdir
 
@@ -33,21 +29,28 @@ Documentation coming soon
 Resolvent analysis
 ------------------
 
-Given the linear operators, conducting a resolvent analysis requires two main ingredients; a linear systems solver, and an svd solver. Before discussing how to set each of these some specific arguments for choosing which resolvent modes to obtain are now given.
+Given the linear operators, conducting a resolvent analysis requires two main ingredients; a linear systems solver, and an svd solver. Before discussing how to set each of these some specific arguments for choosing which resolvent modes to obtain are now given. The code takes the SVD of the resolvent
 
-The linear operator file is set using::
+.. math::
+   :label: resolvent
+
+   \begin{equation}
+   \boldsymbol{\mathcal{H}}=\mathbf{M}_\mathbf{q}(i\omega-\mathbf{A})^{-1}\mathbf{M}_\mathbf{f}^{-1}.
+   \end{equation}
+
+The linear operator :math:`\mathbf{A}` is set using::
 
   -linop filestr
 
-The input weight matrix is set using::
+The input weight matrix :math:`\mathbf{M}_\mathbf{f}^{-1}` is set using::
 
   -wifile filestr
 
-Likewise, the output weight matrix is set using::
+Likewise, the output weight matrix :math:`\mathbf{M}_\mathbf{q}` is set using::
 
   -wofile filestr
 
-The angular frequency at which to compute the resolvent mode is set via the argument::
+The angular frequency :math:`\omega` at which to compute the resolvent mode is set via the argument::
 
   -omega float
 
