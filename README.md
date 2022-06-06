@@ -16,7 +16,7 @@ This repository contains scalable code for conducting linear analyses using the 
 If this repository was useful for your research, please consider citing it as
 
 ```
-@misc{linear_analysis_toos, 
+@misc{linear_analysis_tools, 
 title={csskene/linear-analysis-tools: Initial release}, 
 version={v0.1.0},
 DOI={10.5281/zenodo.6550726}, 
