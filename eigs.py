@@ -4,6 +4,15 @@ import numpy as np
 import os.path
 from os import path
 
+# Append petsc and slepc to the path
+PETSC_DIR  = os.getenv('PETSC_DIR')
+PETSC_ARCH = os.getenv('PETSC_ARCH')
+SLEPC_DIR = os.getenv('SLEPC_DIR')
+petscPath = PETSC_DIR + '/' + PETSC_ARCH + '/lib'
+slepcPath = SLEPC_DIR + '/' + PETSC_ARCH + '/lib'
+sys.path.append(petscPath)
+sys.path.append(slepcPath)
+
 import petsc4py
 import slepc4py
 
@@ -34,6 +43,7 @@ if __name__ == '__main__':
 
     # Read in options (second arg is the default)
     linop      = opts.getString('linop', False)
+    massop     = opts.getString('massop', False)
     linopbeta  = opts.getString('linopbeta', False)
     beta       = opts.getReal('beta',False)
     betas      = opts.getString('betas',False)
@@ -63,6 +73,17 @@ if __name__ == '__main__':
         Print('Reading in L from %s' % linop)
     else:
         raise RuntimeError('Must set a linear operator')
+
+    # L.setOption(PETSc.Mat.Option.NEW_NONZERO_LOCATIONS,True)
+    # L.shift(1e-3)
+    # L.shift(-1e-3)
+    # L.shift(10)
+    # L.shift(-10)
+    # L.shift(-1)
+    # print(massop)
+    if(massop!=False):
+        B = PETSc.Mat().load(PETSc.Viewer().createBinary(massop, 'r'))
+        Print('Reading in B from %s' % massop)
 
     # Implement different betas later
 
@@ -95,12 +116,16 @@ if __name__ == '__main__':
 
     E = SLEPc.EPS()
     E.create()
-    E.setOperators(L)
+    # E.setOperators(L,B=B)
+    if(massop):
+        E.setOperators(L,B=B)
+    else:
+        E.setOperators(L)
     E.setFromOptions()
-    E.setTarget(2+4j)
+
+    E.setWhichEigenpairs(E.Which.TARGET_MAGNITUDE)
     st = E.getST()
     st.setType(st.Type.SINVERT)
-    E.setUp()
 
     Print()
     Print("******************************")
@@ -127,6 +152,7 @@ if __name__ == '__main__':
     Print( "Linear systems solved via %s" % ksp_type)
     pc = ksp.getPC()
     pc_type = pc.getType()
+
     Print( "Preconditioner type %s" % pc_type)
 
     nev, ncv, mpd = E.getDimensions()
@@ -170,7 +196,8 @@ if __name__ == '__main__':
         Print("-------------------- ------------------")
         for i in range(nconv):
             k = E.getEigenpair(i, vr, vi)
-            error = E.computeError(i)
+            # k = E.getEigenvalue(i)
+            error = E.computeError(i,etype=E.ErrorType.RELATIVE)
             if k.imag != 0.0:
                 Print(" %9f%+9fi %12g" % (k.real, k.imag, error))
                 data.printfASCII("%9f%+9fi %17.14g \n" % (k.real, k.imag, error))
