@@ -1,7 +1,7 @@
 # Preprocess to get the required matrices
 from scipy.io import loadmat
 import os,sys
-sys.path.append(os.environ["PETSC_DIR"]+'/'+os.environ["PETSC_ARCH"]+'/lib/petsc/bin/')
+sys.path.append(os.environ["PETSC_DIR"]+'/lib/petsc/bin/')
 import PetscBinaryIO
 import argparse
 from scipy import sparse
