@@ -33,8 +33,8 @@ if __name__ == '__main__':
     opName = Path(linop).stem
 
     op = sparse.load_npz(linop)
-
-    PetscBinaryIO.PetscBinaryIO().writeMatSciPy(open(outdir+'/'+opName+'.dat','w'), op)
+    io = PetscBinaryIO.PetscBinaryIO()
+    io.writeMatSciPy(open(outdir+'/'+opName+'.dat','w'), op)
 
     f = open(outdir+'/info.txt', 'w')
     f.write('Binary files created from the linop %s \n' % linop)
